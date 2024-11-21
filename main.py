@@ -10,6 +10,10 @@ from core.auth.routes import auth_route
 from core.family.routes import family_router
 from core.bank.routes import bank_routes
 from core.lifeInsuranceDetails.routes import life_insurance_router
+from core.passport.routes import passport_router
+from tortoise import Tortoise, run_async
+
+
 # from core.shared.middleware import JWTBearer, JWTMiddleware
 
 SERVER_PREFIX = "/api"
@@ -54,4 +58,6 @@ app.include_router(auth_route, prefix=f"{SERVER_PREFIX}/auth", tags=["auth"])
 app.include_router(family_router, prefix=f"{SERVER_PREFIX}/family", tags=["family"])
 app.include_router(bank_routes, prefix=f"{SERVER_PREFIX}/bank", tags=["bank"])
 app.include_router(life_insurance_router, prefix=f"{SERVER_PREFIX}/lifeInsuranceDetails", tags=["lifeInsuranceDetails"])
+app.include_router(passport_router, prefix=f"{SERVER_PREFIX}/passport", tags=["passport"])
+
 
