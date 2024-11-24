@@ -15,6 +15,9 @@ from tortoise import Tortoise, run_async
 from core.LoanDetails.routes import loan_details_router
 from core.CreditCardDetails.routes import router as credit_card_router
 from core.FixedDepositDetails.routes import router as fixed_deposit_router
+from core.DepositorDetails.routes import router as depositor_router
+from core.PersonBankDepositorConnection.routes import router as connection_router  # Import connection router
+
 
 # from core.shared.middleware import JWTBearer, JWTMiddleware
 
@@ -64,6 +67,8 @@ app.include_router(passport_router, prefix=f"{SERVER_PREFIX}/passport", tags=["p
 app.include_router(loan_details_router, prefix="/api", tags=["Loan Details"])
 app.include_router(credit_card_router, prefix=f"{SERVER_PREFIX}/credit-cards", tags=["Credit Cards"])
 app.include_router(fixed_deposit_router, prefix="/api/fixed-deposits", tags=["Fixed Deposits"])
+app.include_router(depositor_router, prefix="/api/depositors", tags=["Depositors"])
+app.include_router(connection_router, prefix="/api/connections", tags=["Connections"])
 
 
 

@@ -1,6 +1,6 @@
 from pydantic import BaseModel, EmailStr
 from datetime import date
-from core.enum import DepositType, DepositStatus
+from core.FixedDepositDetails.enum import DepositType, DepositStatus
 
 class FixedDepositCreate(BaseModel):
     depositor_name: str  # Name of the depositor
