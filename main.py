@@ -12,7 +12,9 @@ from core.bank.routes import bank_routes
 from core.lifeInsuranceDetails.routes import life_insurance_router
 from core.passport.routes import passport_router
 from tortoise import Tortoise, run_async
-
+from core.LoanDetails.routes import loan_details_router
+from core.CreditCardDetails.routes import router as credit_card_router
+from core.FixedDepositDetails.routes import router as fixed_deposit_router
 
 # from core.shared.middleware import JWTBearer, JWTMiddleware
 
@@ -27,7 +29,7 @@ async def lifespan(app: FastAPI) -> AsyncIterator[None]:
     await Tortoise.close_connections()
 
 app = FastAPI(
-    title="DUMMY_PROJECT",
+    title="DUMMY PROJECT",
     version="1.0.0",
     openapi_url=f"{SERVER_PREFIX}/openapi.json",
     docs_url=f"{SERVER_PREFIX}/docs",
@@ -59,5 +61,9 @@ app.include_router(family_router, prefix=f"{SERVER_PREFIX}/family", tags=["famil
 app.include_router(bank_routes, prefix=f"{SERVER_PREFIX}/bank", tags=["bank"])
 app.include_router(life_insurance_router, prefix=f"{SERVER_PREFIX}/lifeInsuranceDetails", tags=["lifeInsuranceDetails"])
 app.include_router(passport_router, prefix=f"{SERVER_PREFIX}/passport", tags=["passport"])
+app.include_router(loan_details_router, prefix="/api", tags=["Loan Details"])
+app.include_router(credit_card_router, prefix=f"{SERVER_PREFIX}/credit-cards", tags=["Credit Cards"])
+app.include_router(fixed_deposit_router, prefix="/api/fixed-deposits", tags=["Fixed Deposits"])
+
 
 
