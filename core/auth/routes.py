@@ -17,7 +17,7 @@ async def create_user(user: UserCreate):
     )
     if await user_obj.exists():
         raise HTTPException(status_code=400, detail="Username or Email already registered")
-
+    #if user.email contains @
     new_user = User(
         username=user.username,
         email=user.email,
