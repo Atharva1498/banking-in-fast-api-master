@@ -5,7 +5,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from tortoise.contrib.fastapi import register_tortoise
 from core.shared.db import init_db
 from core.shared.conf import settings
-from core.auth.routes import auth_route
+from core.auth.routes import auth_router
 from core.family.routes import family_router
 from core.bank.routes import bank_routes
 from core.lifeInsuranceDetails.routes import life_insurance_router
@@ -53,7 +53,7 @@ app.add_middleware(
 )
 
 # Register routes
-app.include_router(auth_route, prefix=f"{SERVER_PREFIX}/auth", tags=["Auth"])
+app.include_router(auth_router, prefix="/api/auth", tags=["Authentication"])
 app.include_router(family_router, prefix=f"{SERVER_PREFIX}/family", tags=["Family"])
 app.include_router(bank_routes, prefix=f"{SERVER_PREFIX}/bank", tags=["Bank"])
 app.include_router(life_insurance_router, prefix=f"{SERVER_PREFIX}/lifeInsuranceDetails", tags=["Life Insurance"])

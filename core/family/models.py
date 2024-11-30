@@ -23,7 +23,6 @@ class FamilyMember(Model):
     birthdate = fields.DateField()
     email = fields.CharField(max_length=255, unique=True, null=True)
     phone_number = fields.CharField(max_length=15, unique=True, null=True)
-    address = fields.ForeignKeyField("models.Address", related_name="family_members", null=True)
     user = fields.ForeignKeyField("models.User", related_name="family_members")
     gender = fields.CharEnumField(Gender)
 
@@ -33,9 +32,11 @@ class Person(Model):
     middle_name = fields.CharField(max_length=50, null=True)
     last_name = fields.CharField(max_length=50)
     dob = fields.DateField()
-    address = fields.TextField()
-    city = fields.CharField(max_length=50)
-    state = fields.CharField(max_length=50)
+    email = fields.CharField(max_length=255, unique=True, null=True)
     phone_number = fields.CharField(max_length=15)
     alternate_phone_no = fields.CharField(max_length=15, null=True)
+    gender = fields.CharEnumField(Gender)
+
+    
+   
 
