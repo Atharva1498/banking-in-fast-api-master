@@ -2,11 +2,7 @@ from pydantic import BaseModel, EmailStr, validator
 from typing import Optional
 
 
-class UserLoginSchema(BaseModel):
-    email: EmailStr
-    password: str
-
-
+# User registration schema
 class UserRegisterSchema(BaseModel):
     username: str
     email: EmailStr
@@ -19,19 +15,30 @@ class UserRegisterSchema(BaseModel):
             raise ValueError("Passwords do not match")
         return confirm_password
 
+    class Config:
+        orm_mode = True
 
+
+# User login schema
+class UserLoginSchema(BaseModel):
+    email: EmailStr
+    password: str
+
+    class Config:
+        orm_mode = True
+
+
+# Email verification schema (used for email confirmation)
 class EmailVerificationSchema(BaseModel):
     email: EmailStr
 
-
-class OTPVerificationSchema(BaseModel):
-    email: EmailStr
-    otp: str
+    class Config:
+        orm_mode = True
 
 
+# Password reset schema (for resetting the password)
 class PasswordResetSchema(BaseModel):
     email: EmailStr
-    otp: str
     new_password: str
     confirm_new_password: str
 
@@ -40,3 +47,6 @@ class PasswordResetSchema(BaseModel):
         if "new_password" in values and confirm_new_password != values["new_password"]:
             raise ValueError("Passwords do not match")
         return confirm_new_password
+
+    class Config:
+        orm_mode = True

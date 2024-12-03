@@ -6,11 +6,11 @@ from tortoise.contrib.fastapi import register_tortoise
 from core.shared.db import init_db
 from core.shared.conf import settings
 from core.auth.routes import auth_router
-from core.family.routes import family_router
+from core.Person.routes import person_router
 from core.bank.routes import bank_routes
 from core.lifeInsuranceDetails.routes import life_insurance_router
 from core.passport.routes import passport_router
-from core.LoanDetails.routes import loan_details_router
+from core.LoanDetails.routes import loan_routes
 from core.CreditCardDetails.routes import router as credit_card_router
 from core.FixedDepositDetails.routes import router as fixed_deposit_router
 from core.DepositorDetails.routes import router as depositor_router
@@ -54,11 +54,11 @@ app.add_middleware(
 
 # Register routes
 app.include_router(auth_router, prefix="/api/auth", tags=["Authentication"])
-app.include_router(family_router, prefix=f"{SERVER_PREFIX}/family", tags=["Family"])
+app.include_router(person_router, prefix="/api", tags=["Person & Address"])
 app.include_router(bank_routes, prefix=f"{SERVER_PREFIX}/bank", tags=["Bank"])
 app.include_router(life_insurance_router, prefix=f"{SERVER_PREFIX}/lifeInsuranceDetails", tags=["Life Insurance"])
 app.include_router(passport_router, prefix=f"{SERVER_PREFIX}/passport", tags=["Passport"])
-app.include_router(loan_details_router, prefix=f"{SERVER_PREFIX}/loans", tags=["Loan Details"])
+app.include_router(loan_routes, prefix=f"{SERVER_PREFIX}/loans", tags=["Loan Details"])
 app.include_router(credit_card_router, prefix=f"{SERVER_PREFIX}/credit-cards", tags=["Credit Cards"])
 app.include_router(fixed_deposit_router, prefix=f"{SERVER_PREFIX}/fixed-deposits", tags=["Fixed Deposits"])
 app.include_router(depositor_router, prefix=f"{SERVER_PREFIX}/depositors", tags=["Depositors"])

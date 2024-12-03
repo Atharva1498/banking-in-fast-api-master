@@ -4,16 +4,14 @@ from core.auth.schemas import (
     UserLoginSchema,
     UserRegisterSchema,
     EmailVerificationSchema,
-    OTPVerificationSchema,
     PasswordResetSchema,
 )
-from core.shared.utils import generate_token, send_verification_email
+from core.shared.utils import send_verification_email
 from datetime import datetime, timedelta
-import random
 
 auth_router = APIRouter()
 
-
+# POST: Register a new user
 @auth_router.post("/register/")
 async def register_user(data: UserRegisterSchema):
     user_exists = await User.filter(email=data.email).exists()
@@ -27,38 +25,46 @@ async def register_user(data: UserRegisterSchema):
     user.set_password(data.password)
     await user.save()
 
-    # Generate OTP for email verification
-    otp = generate_token(6)
-    user.otp = otp
-    user.otp_expiration = datetime.utcnow() + timedelta(minutes=10)
-    await user.save()
-
     # Send verification email
-    await send_verification_email(user.email, otp)
+    await send_verification_email(user.email)
 
-    return {"message": "User registered. Verify your email using the OTP sent."}
+    return {"message": "User registered. A verification email has been sent."}
 
+# GET: Retrieve user details
+@auth_router.get("/user/{email}")
+async def get_user_details(email: str):
+    user = await User.filter(email=email).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    return {
+        "user_id": user.id,
+        "username": user.username,
+        "email": user.email,
+        "is_active": user.is_active,
+        "is_email_verified": user.is_email_verified,
+    }
 
+# POST: Verify email with OTP
 @auth_router.post("/verify-email/")
-async def verify_email(data: OTPVerificationSchema):
+async def verify_email(data: EmailVerificationSchema):
     user = await User.filter(email=data.email).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    if user.otp != data.otp:
-        raise HTTPException(status_code=400, detail="Invalid OTP")
-
-    if datetime.utcnow() > user.otp_expiration:
-        raise HTTPException(status_code=400, detail="OTP expired")
-
     user.is_email_verified = True
-    user.otp = None
-    user.otp_expiration = None
     await user.save()
 
     return {"message": "Email verified successfully."}
 
+# GET: Check registration status
+@auth_router.get("/registration-status/{email}")
+async def check_registration_status(email: str):
+    user = await User.filter(email=email).first()
+    if not user:
+        return {"registered": False, "message": "Email not registered"}
+    return {"registered": True, "is_email_verified": user.is_email_verified}
 
+# POST: Login a user
 @auth_router.post("/login/")
 async def login(data: UserLoginSchema):
     user = await User.filter(email=data.email).first()
@@ -70,40 +76,26 @@ async def login(data: UserLoginSchema):
 
     return {"message": "Login successful."}
 
-
+# POST: Forgot password
 @auth_router.post("/forgot-password/")
 async def forgot_password(data: EmailVerificationSchema):
     user = await User.filter(email=data.email).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    # Generate OTP for password reset
-    otp = generate_token(6)
-    user.otp = otp
-    user.otp_expiration = datetime.utcnow() + timedelta(minutes=10)
-    await user.save()
+    # Send a password reset email
+    await send_verification_email(user.email, reset=True)
 
-    # Send OTP via email
-    await send_verification_email(user.email, otp, reset=True)
+    return {"message": "Password reset email sent."}
 
-    return {"message": "OTP sent to your email for password reset."}
-
-
+# POST: Reset password
 @auth_router.post("/reset-password/")
 async def reset_password(data: PasswordResetSchema):
     user = await User.filter(email=data.email).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
 
-    if user.otp != data.otp:
-        raise HTTPException(status_code=400, detail="Invalid OTP")
-
-    if datetime.utcnow() > user.otp_expiration:
-        raise HTTPException(status_code=400, detail="OTP expired")
-
     user.set_password(data.new_password)
-    user.otp = None
-    user.otp_expiration = None
     await user.save()
 
     return {"message": "Password reset successfully."}

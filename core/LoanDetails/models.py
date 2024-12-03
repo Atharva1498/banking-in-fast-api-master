@@ -1,15 +1,36 @@
-from tortoise import fields, models
+from tortoise.models import Model
+from tortoise import fields
+from core.LoanDetails.enum import LoanType
 
-class LoanDetails(models.Model):
-    loan_id = fields.CharField(max_length=20, unique=True)  # Unique identifier for the loan
+
+class LoanDetails(Model):
+    id = fields.IntField(pk=True)
     borrower_name = fields.CharField(max_length=100)  # Name of the person who took the loan
-    loan_type = fields.CharField(max_length=50)  # Type of loan (e.g., Home, Personal, Auto)
+    sanction_date = fields.DateField()  # Sanction date of the loan
     loan_amount = fields.DecimalField(max_digits=12, decimal_places=2)  # Amount of the loan
-    interest_rate = fields.DecimalField(max_digits=5, decimal_places=2)  # Interest rate in percentage
-    tenure = fields.IntField()  # Tenure of the loan in months
+    loan_tenure = fields.IntField()  # Loan tenure in months
+    
     repayment_frequency = fields.CharField(max_length=20)  # Frequency of repayment (e.g., Monthly, Quarterly)
-    loan_status = fields.CharField(max_length=20)  # Status of the loan (e.g., Active, Closed, Defaulted)
+    no_of_emi = fields.IntField()  # Number of EMIs
+    emi_amount = fields.FloatField()  # EMI amount
+    loan_type = fields.CharEnumField(LoanType, max_length=50)  # Loan type (Enum)
+    current_pending_amount = fields.FloatField()  # Current pending loan amount
+    date_of_emi = fields.DateField()  # Date of EMI payment
     start_date = fields.DateField()  # Start date of the loan
     end_date = fields.DateField()  # End date of the loan
-    created_at = fields.DatetimeField(auto_now_add=True)  # Auto-generated creation timestamp
-    updated_at = fields.DatetimeField(auto_now=True)  # Auto-generated update timestamp
+    updated_at = fields.DatetimeField(auto_now=True) 
+
+    # Relations
+    bank_detail = fields.ForeignKeyField(
+        "models.BankDetails", related_name="loans"
+    )  # Link to the bank
+    person = fields.ForeignKeyField(
+        "models.Person", related_name="loans", null=True
+    )  # Link to the person (optional)
+
+    class Meta:
+        table = "loan_details"
+
+    
+    
+    

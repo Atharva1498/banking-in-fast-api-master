@@ -1,7 +1,5 @@
 from tortoise import fields, models
 from passlib.context import CryptContext
-from datetime import datetime, timedelta
-
 
 pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
@@ -13,8 +11,6 @@ class User(models.Model):
     hashed_password = fields.CharField(max_length=128)
     is_active = fields.BooleanField(default=True)
     is_email_verified = fields.BooleanField(default=False)
-    otp = fields.CharField(max_length=6, null=True)  # Store OTP
-    otp_expiration = fields.DatetimeField(null=True)  # OTP expiration time
 
     def set_password(self, password: str):
         self.hashed_password = pwd_context.hash(password)

@@ -1,47 +1,60 @@
-from typing import Optional
-from pydantic import BaseModel, EmailStr, Field, constr, validator
-from .enum import AccountType
+from pydantic import BaseModel
+from typing import List, Optional
+from datetime import date
+from enum import Enum
 
+
+# BankDetails Schemas
 class BankDetailsCreate(BaseModel):
-    bank_name: str = Field(max_length=255)
-    account_number: str = Field(max_length=50)
-    routing_number: str = Field(max_length=50, null=True)
-    account_type: AccountType
-    family_member: Optional[int] = None
+    bank_name: str
+    branch_address: Optional[str]
+    account_number: str
+    account_type: str
+    branch_ifsc_code: Optional[str]
+    bank_micr_code: Optional[str]
+    cheque_book_issued_date: Optional[date]
+    netbanking_id: Optional[str]
+    registered_email: Optional[str]
+    registered_mobile: Optional[str]
+    bank_helpline_number: Optional[str]
+    bank_helpline_email: Optional[str]
+    relationship_manager_name: Optional[str]
+    relationship_manager_email: Optional[str]
+    relationship_manager_mobile: Optional[str]
 
-    @validator('bank_name')
-    def bank_name_must_not_be_empty(cls, v):
-        if not v.strip():
-            raise ValueError('Bank name must not be empty')
-        return v
 
-    @validator('account_number')
-    def account_number_must_be_numeric(cls, v):
-        if not v.isdigit():
-            raise ValueError('Account number must be numeric')
-        return v
+# BankDetailsResponse extends BankDetailsCreate to include id and person_id
+class BankDetailsResponse(BankDetailsCreate):
+    id: int
+    person_id: int  # Include person_id in the response
 
-    @validator('routing_number')
-    def routing_number_must_be_numeric_if_provided(cls, v):
-        if v and not v.isdigit():
-            raise ValueError('Routing number must be numeric if provided')
-        return v
-
-    @validator('account_type')
-    def account_type_is_valid(cls, v):
-        if v not in AccountType:
-            raise ValueError('Invalid account type')
-        return v
-    
-
-class BankCreateResponse(BaseModel):
-    id: int 
-    bank_name: str 
-    account_number: str 
-    routing_number: str 
-    account_type: AccountType
-    user: int 
-    family_member: int
-    
     class Config:
-        from_attributes = True 
+        orm_mode = True
+
+
+# CreditCard Schemas
+class CreditCardCreate(BaseModel):
+    card_number: str
+    expiry_date: date
+    cardholder_name: str
+
+
+class CreditCardResponse(CreditCardCreate):
+    id: int
+
+    class Config:
+        orm_mode = True
+
+
+# DebitCard Schemas
+class DebitCardCreate(BaseModel):
+    card_number: str
+    expiry_date: date
+    cardholder_name: str
+
+
+class DebitCardResponse(DebitCardCreate):
+    id: int
+
+    class Config:
+        orm_mode = True

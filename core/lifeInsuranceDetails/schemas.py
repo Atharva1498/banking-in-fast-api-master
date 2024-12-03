@@ -1,6 +1,7 @@
 from pydantic import BaseModel
 from datetime import date
 
+
 class LifeInsuranceCreate(BaseModel):
     policy_number: str
     policy_type: str
@@ -8,7 +9,8 @@ class LifeInsuranceCreate(BaseModel):
     start_date: date
     end_date: date
     beneficiary_name: str
-    insured_member: int = None  # Optional, can be None if not provided
+    person_id: int  # Associate the life insurance with a person
+
 
 class LifeInsuranceResponse(BaseModel):
     id: int
@@ -18,6 +20,7 @@ class LifeInsuranceResponse(BaseModel):
     start_date: date
     end_date: date
     beneficiary_name: str
+    person_id: int  # Include person_id in the response
 
     class Config:
         orm_mode = True
