@@ -7,6 +7,7 @@ from tortoise.transactions import in_transaction
 person_router = APIRouter()
 
 
+# Create a new person along with their addresses and family members
 @person_router.post("/person", response_model=PersonResponse, status_code=status.HTTP_201_CREATED)
 async def create_person(person_data: PersonCreate):
     async with in_transaction():
@@ -18,6 +19,8 @@ async def create_person(person_data: PersonCreate):
             dob=person_data.dob,
             phone_number=person_data.phone_number,
             email=person_data.email,
+            aadhar_card_number=person_data.aadhar_card_number,
+            pan_card_number=person_data.pan_card_number,
         )
 
         # Create addresses
@@ -31,6 +34,7 @@ async def create_person(person_data: PersonCreate):
         return await Person.get(id=person.id).prefetch_related("addresses", "family_members")
 
 
+# Retrieve a person by their ID, along with their addresses and family members
 @person_router.get("/person/{person_id}", response_model=PersonResponse)
 async def get_person(person_id: int):
     person = await Person.get_or_none(id=person_id).prefetch_related("addresses", "family_members")
@@ -39,6 +43,7 @@ async def get_person(person_id: int):
     return person
 
 
+# Update an existing person's details, addresses, and family members
 @person_router.put("/person/{person_id}", response_model=PersonResponse)
 async def update_person(person_id: int, person_data: PersonCreate):
     person = await Person.get_or_none(id=person_id)
@@ -46,7 +51,9 @@ async def update_person(person_id: int, person_data: PersonCreate):
         raise HTTPException(status_code=404, detail="Person not found")
 
     # Update person details
-    await person.update_from_dict(person_data.dict(exclude={"addresses", "family_members"})).save()
+    await person.update_from_dict(
+        person_data.dict(exclude={"addresses", "family_members"})
+    ).save()
 
     # Update addresses
     await Address.filter(person=person).delete()
@@ -61,6 +68,7 @@ async def update_person(person_id: int, person_data: PersonCreate):
     return await Person.get(id=person.id).prefetch_related("addresses", "family_members")
 
 
+# Delete a person and their associated addresses and family members
 @person_router.delete("/person/{person_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_person(person_id: int):
     person = await Person.get_or_none(id=person_id)

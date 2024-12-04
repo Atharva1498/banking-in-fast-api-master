@@ -1,7 +1,8 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, EmailStr
 from datetime import date
 from typing import List, Optional
 from core.Person.enum import Gender, AddressType
+
 
 # Address Schemas
 class AddressCreate(BaseModel):
@@ -11,11 +12,13 @@ class AddressCreate(BaseModel):
     zip_code: str
     address_type: AddressType
 
+
 class AddressResponse(AddressCreate):
     id: int
 
     class Config:
         orm_mode = True
+
 
 # Family Details Schemas
 class FamilyDetailsCreate(BaseModel):
@@ -25,11 +28,13 @@ class FamilyDetailsCreate(BaseModel):
     birthdate: date
     gender: Gender
 
+
 class FamilyDetailsResponse(FamilyDetailsCreate):
     id: int
 
     class Config:
         orm_mode = True
+
 
 # Person Schemas
 class PersonCreate(BaseModel):
@@ -38,11 +43,14 @@ class PersonCreate(BaseModel):
     last_name: str
     dob: date
     phone_number: str
-    email: Optional[str] = None
+    email: Optional[EmailStr] = None
+    aadhar_card_number: Optional[str] = Field(max_length=12, pattern=r"^\d{12}$")
+    pan_card_number: Optional[str] = Field(max_length=10, pattern=r"^[A-Z]{5}[0-9]{4}[A-Z]{1}$") 
 
     # Nested data
     addresses: List[AddressCreate]
     family_members: List[FamilyDetailsCreate]
+
 
 class PersonResponse(PersonCreate):
     id: int
