@@ -1,5 +1,5 @@
 from pydantic import BaseModel, EmailStr
-from datetime import date
+from datetime import datetime, date
 from core.FixedDepositDetails.enum import DepositType, DepositStatus
 
 class FixedDepositCreate(BaseModel):
@@ -36,6 +36,8 @@ class FixedDepositResponse(BaseModel):
     deposit_status: DepositStatus  # Status of the FD
     start_date: date  # Start date of the FD
     maturity_date: date  # Maturity date of the FD
+    created_at: datetime  # Timestamp of creation
+    updated_at: datetime  # Timestamp of last update
 
     class Config:
         orm_mode = True  # Ensure compatibility with Tortoise ORM models
