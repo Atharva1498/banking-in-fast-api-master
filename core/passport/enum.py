@@ -1,18 +1,22 @@
-# core/insurance/enum.py
-
 from enum import Enum
 
-class LifeInsuranceType(str, Enum):
-    TERM = "term"
-    WHOLE_LIFE = "whole_life"
-    UNIVERSAL_LIFE = "universal_life"
-    VARIABLE_LIFE = "variable_life"
-    FINAL_EXPENSE = "final_expense"
-    GROUP_LIFE = "group_life"
 
-class BeneficiaryRelation(str, Enum):
-    SPOUSE = "spouse"
-    CHILD = "child"
-    PARENT = "parent"
-    SIBLING = "sibling"
-    OTHER = "other"
+class Country(str, Enum):
+    INDIA = "India"
+    USA = "USA"
+    UK = "UK"
+    CANADA = "Canada"
+    AUSTRALIA = "Australia"
+    RUSSIA ="Russia
+
+class State(str, Enum):
+    MAHARASHTRA = "Maharashtra"
+    GUJARAT = "Gujarat"
+    CALIFORNIA = "California"
+    TEXAS = "Texas"
+
+class City(str, Enum):
+    MUMBAI = "Mumbai"
+    PUNE = "Pune"
+    NEW_YORK = "New York"
+    LOS_ANGELES = "Los Angeles"

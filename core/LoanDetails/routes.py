@@ -100,4 +100,7 @@ async def update_loan(loan_id: int, loan_data: LoanDetailUpdate):
 
 @loan_routes.delete("/loans/{loan_id}", status_code=status.HTTP_204_NO_CONTENT)
 async def delete_loan(loan_id: int):
-    dele
+    loan = await LoanDetails.get_or_none(id=loan_id)
+    if not loan:
+        raise HTTPException(status_code=404, detail="Loan not found")
+    await loan.delete()

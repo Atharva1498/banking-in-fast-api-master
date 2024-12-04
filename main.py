@@ -14,7 +14,6 @@ from core.LoanDetails.routes import loan_routes
 from core.CreditCardDetails.routes import router as credit_card_router
 from core.FixedDepositDetails.routes import router as fixed_deposit_router
 from core.DepositorDetails.routes import router as depositor_router
-from core.PersonBankDepositorConnection.routes import router as connection_router
 from core.CreditorDebitor.routes import router as creditor_debitor_router 
 from core.GoldDetails.routes import router as gold_details_router
 from core.PropertyDetails.routes import router as property_details_router
@@ -62,7 +61,6 @@ app.include_router(loan_routes, prefix=f"{SERVER_PREFIX}/loans", tags=["Loan Det
 app.include_router(credit_card_router, prefix=f"{SERVER_PREFIX}/credit-cards", tags=["Credit Cards"])
 app.include_router(fixed_deposit_router, prefix=f"{SERVER_PREFIX}/fixed-deposits", tags=["Fixed Deposits"])
 app.include_router(depositor_router, prefix=f"{SERVER_PREFIX}/depositors", tags=["Depositors"])
-app.include_router(connection_router, prefix=f"{SERVER_PREFIX}/connections", tags=["Connections"])
 app.include_router(creditor_debitor_router, prefix=f"{SERVER_PREFIX}/creditor-debitor", tags=["Creditor & Debitor"])
 app.include_router(gold_details_router, prefix="/api/gold-details", tags=["Gold Details"])
 app.include_router(property_details_router, prefix="/api/property-details", tags=["Property Details"])
