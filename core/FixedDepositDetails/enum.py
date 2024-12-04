@@ -8,4 +8,3 @@ class DepositStatus(str, Enum):
     ACTIVE = "active"
     CLOSED = "closed"
     PENDING = "pending"
-
