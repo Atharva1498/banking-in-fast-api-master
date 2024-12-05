@@ -1,44 +1,36 @@
-from fastapi import APIRouter, HTTPException, status
+from fastapi import APIRouter, HTTPException
 from typing import List
 from core.DepositorDetails.models import DepositorDetails
-from core.DepositorDetails.schemas import DepositorCreate, DepositorResponse
-from core.bank.models import BankDetails
+from core.DepositorDetails.schemas import DepositorCreate
 from core.Person.models import Person
 
 router = APIRouter()
 
-# Create a new depositor
-@router.post("/depositors", response_model=DepositorResponse)
-async def create_depositor(data: DepositorCreate):
+# Create a new depositor for a person
+@router.post("/person/depositors/{person_id}", response_model=DepositorCreate)
+async def create_depositor(person_id: int, data: DepositorCreate):
     # Validate the person
-    person = await Person.get_or_none(id=data.person_id)
+    person = await Person.get_or_none(id=person_id)
     if not person:
         raise HTTPException(status_code=404, detail="Person not found")
-    
-    # Validate the bank
-    bank = await BankDetails.get_or_none(id=data.bank_id)
-    if not bank:
-        raise HTTPException(status_code=404, detail="Bank not found")
 
     # Create the depositor record
-    depositor = await DepositorDetails.create(**data.dict())
+    depositor = await DepositorDetails.create(
+        depositor_name=data.depositor_name,
+        person_id=person_id,  
+        contact_number=data.contact_number,
+        email=data.email,
+        address=data.address,
+        amount_invested=data.amount_invested,
+        roi=data.roi,
+        deposit_type=data.deposit_type,
+        invested_date=data.invested_date,
+        maturity_date=data.maturity_date,
+    )
     return depositor
 
-# Get list of all depositors
-@router.get("/depositors", response_model=List[DepositorResponse])
-async def list_depositors():
-    return await DepositorDetails.all()
-
-# Get a specific depositor by ID
-@router.get("/depositors/{depositor_id}", response_model=DepositorResponse)
-async def get_depositor(depositor_id: int):
-    depositor = await DepositorDetails.filter(id=depositor_id).first()
-    if not depositor:
-        raise HTTPException(status_code=404, detail="Depositor not found")
-    return depositor
-
-# Get all depositors by person_id
-@router.get("/person/{person_id}/depositors", response_model=List[DepositorResponse])
+# Get all depositors for a person
+@router.get("/person/depositors/{person_id}", response_model=List[DepositorCreate])
 async def get_depositors_by_person(person_id: int):
     person = await Person.get_or_none(id=person_id)
     if not person:
@@ -50,36 +42,39 @@ async def get_depositors_by_person(person_id: int):
     
     return depositors
 
-# Get all depositors by bank_id
-@router.get("/bank/{bank_id}/depositors", response_model=List[DepositorResponse])
-async def get_depositors_by_bank(bank_id: int):
-    bank = await BankDetails.get_or_none(id=bank_id)
-    if not bank:
-        raise HTTPException(status_code=404, detail="Bank not found")
-
-    depositors = await DepositorDetails.filter(bank_id=bank_id).all()
-    if not depositors:
-        raise HTTPException(status_code=404, detail="No depositors found for this bank")
-    
-    return depositors
-
-# Update a specific depositor by ID
-@router.put("/depositors/{depositor_id}", response_model=DepositorResponse)
-async def update_depositor(depositor_id: int, data: DepositorCreate):
-    depositor = await DepositorDetails.filter(id=depositor_id).first()
+# Update a depositor for a person
+@router.put("/person/depositors/{person_id}", response_model=DepositorCreate)
+async def update_depositor(person_id: int, data: DepositorCreate):
+    depositor = await DepositorDetails.filter(person_id=person_id).first()
     if not depositor:
         raise HTTPException(status_code=404, detail="Depositor not found")
     
     # Update depositor details
-    await depositor.update_from_dict(data.dict()).save()
+    await depositor.update_from_dict(
+        {
+            "depositor_name": data.depositor_name,
+            "person_id": person_id,  # Ensure the person_id remains the same
+            "contact_number": data.contact_number,
+            "email": data.email,
+            "address": data.address,
+            "amount_invested": data.amount_invested,
+            "roi": data.roi,
+            "deposit_type": data.deposit_type,
+            "invested_date": data.invested_date,
+            "maturity_date": data.maturity_date,
+        }
+    ).save()
     return depositor
 
-# Delete a specific depositor by ID
-@router.delete("/depositors/{depositor_id}")
-async def delete_depositor(depositor_id: int):
-    depositor = await DepositorDetails.filter(id=depositor_id).first()
-    if not depositor:
-        raise HTTPException(status_code=404, detail="Depositor not found")
+# Delete all depositors for a person
+@router.delete("/person/depositors/{person_id}")
+async def delete_all_depositors_by_person(person_id: int):
+    person = await Person.get_or_none(id=person_id)
+    if not person:
+        raise HTTPException(status_code=404, detail="Person not found")
     
-    await depositor.delete()
-    return {"message": "Depositor deleted successfully"}
+    deleted_count = await DepositorDetails.filter(person_id=person_id).delete()
+    if not deleted_count:
+        raise HTTPException(status_code=404, detail="No depositors found for this person")
+    
+    return {"message": f"{deleted_count} depositors deleted successfully"}
