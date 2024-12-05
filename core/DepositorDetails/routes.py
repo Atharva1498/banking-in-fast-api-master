@@ -28,20 +28,20 @@ async def create_depositor(person_id: int, data: DepositorCreate):
         maturity_date=data.maturity_date,
     )
     return depositor
-
-# Get all depositors for a person
+#Get all depositors for a person
 @router.get("/person/depositors/{person_id}", response_model=List[DepositorCreate])
 async def get_depositors_by_person(person_id: int):
-    person = await Person.get_or_none(id=person_id)
-    if not person:
+    # Validate if the person exists
+    person_exists = await Person.filter(id=person_id).exists()
+    if not person_exists:
         raise HTTPException(status_code=404, detail="Person not found")
 
+    # Fetch depositors associated with the person
     depositors = await DepositorDetails.filter(person_id=person_id).all()
     if not depositors:
         raise HTTPException(status_code=404, detail="No depositors found for this person")
     
     return depositors
-
 # Update a depositor for a person
 @router.put("/person/depositors/{person_id}", response_model=DepositorCreate)
 async def update_depositor(person_id: int, data: DepositorCreate):
