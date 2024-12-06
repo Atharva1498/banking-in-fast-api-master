@@ -1,48 +1,101 @@
 from fastapi import APIRouter, HTTPException
-
 from core.auth.models import User
-from core.auth.schemas import LoginResponse, UserCreate, UserLogin, UserResponse
-from core.shared.conf import settings
-from tortoise.expressions import Q
+from core.auth.schemas import (
+    UserLoginSchema,
+    UserRegisterSchema,
+    EmailVerificationSchema,
+    PasswordResetSchema,
+)
+from core.shared.utils import send_verification_email
+from datetime import datetime, timedelta
 
-from core.shared.auth import create_tokens
+auth_router = APIRouter()
 
-auth_route = APIRouter()
+# POST: Register a new user
+@auth_router.post("/register/")
+async def register_user(data: UserRegisterSchema):
+    user_exists = await User.filter(email=data.email).exists()
+    if user_exists:
+        raise HTTPException(status_code=400, detail="Email already registered")
 
-
-@auth_route.post("/signup/", response_model=UserResponse)
-async def create_user(user: UserCreate):
-    user_obj =  User.filter(
-        Q(username=user.username) | Q(email=user.email)
+    user = User(
+        username=data.username,
+        email=data.email,
     )
-    if await user_obj.exists():
-        raise HTTPException(status_code=400, detail="Username or Email already registered")
+    user.set_password(data.password)
+    await user.save()
 
-    new_user = User(
-        username=user.username,
-        email=user.email,
-        first_name=user.first_name,
-        last_name=user.last_name,
-    )
-    new_user.set_password(user.password)
-    await new_user.save()
-    return new_user
+    # Send verification email
+    await send_verification_email(user.email)
 
+    return {"message": "User registered. A verification email has been sent."}
 
-@auth_route.post("/login/", response_model = LoginResponse)
-async def login_user(user_login: UserLogin):
-    user = await User.filter(username=user_login.username).first()
-    if not user or not user.check_password(user_login.password):
-        raise HTTPException(status_code=401, detail="Invalid credentials")
-    
-    # Generate access and refresh tokens
-    access_token, refresh_token = create_tokens(user)
-    access_expiry = settings.JWT_EXPIRATION_TIME * 60
-    refresh_expiry = settings.JWT_REFRESH_EXPIRATION_TIME * 60
+# GET: Retrieve user details
+@auth_router.get("/user/{email}")
+async def get_user_details(email: str):
+    user = await User.filter(email=email).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
     return {
-        "access_token": access_token,
-        "access_expiry": access_expiry,
-        "refresh_token": refresh_token,
-        "refresh_expiry": refresh_expiry,
-        "status": True
+        "user_id": user.id,
+        "username": user.username,
+        "email": user.email,
+        "is_active": user.is_active,
+        "is_email_verified": user.is_email_verified,
     }
+
+# POST: Verify email with OTP
+@auth_router.post("/verify-email/")
+async def verify_email(data: EmailVerificationSchema):
+    user = await User.filter(email=data.email).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    user.is_email_verified = True
+    await user.save()
+
+    return {"message": "Email verified successfully."}
+
+# GET: Check registration status
+@auth_router.get("/registration-status/{email}")
+async def check_registration_status(email: str):
+    user = await User.filter(email=email).first()
+    if not user:
+        return {"registered": False, "message": "Email not registered"}
+    return {"registered": True, "is_email_verified": user.is_email_verified}
+
+# POST: Login a user
+@auth_router.post("/login/")
+async def login(data: UserLoginSchema):
+    user = await User.filter(email=data.email).first()
+    if not user or not user.check_password(data.password):
+        raise HTTPException(status_code=401, detail="Invalid credentials")
+
+    if not user.is_email_verified:
+        raise HTTPException(status_code=400, detail="Email not verified")
+
+    return {"message": "Login successful."}
+
+# POST: Forgot password
+@auth_router.post("/forgot-password/")
+async def forgot_password(data: EmailVerificationSchema):
+    user = await User.filter(email=data.email).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    # Send a password reset email
+    await send_verification_email(user.email, reset=True)
+
+    return {"message": "Password reset email sent."}
+
+# POST: Reset password
+@auth_router.post("/reset-password/")
+async def reset_password(data: PasswordResetSchema):
+    user = await User.filter(email=data.email).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    user.set_password(data.new_password)
+    await user.save()
+
+    return {"message": "Password reset successfully."}

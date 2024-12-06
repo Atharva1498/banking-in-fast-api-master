@@ -3,7 +3,6 @@ from typing import Tuple, Union
 from fastapi import Depends, HTTPException, Request
 from jose import JWTError, jwt
 from .conf import settings
-
 from core.auth.models import User
 
 

@@ -15,11 +15,3 @@ class RepaymentFrequency(str, Enum):
     ANNUALLY = "annually"
     ONE_TIME = "one_time"
 
-class LoanStatus(str, Enum):
-    ACTIVE = "active"
-    CLOSED = "closed"
-    DEFAULTED = "defaulted"
-    PENDING_APPROVAL = "pending_approval"
-    REJECTED = "rejected"
-
-

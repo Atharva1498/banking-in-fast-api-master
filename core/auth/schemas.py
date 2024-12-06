@@ -1,29 +1,52 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, validator
+from typing import Optional
 
-class UserCreate(BaseModel):
+
+# User registration schema
+class UserRegisterSchema(BaseModel):
     username: str
     email: EmailStr
-    first_name: str
-    last_name: str
     password: str
+    confirm_password: str
 
-class UserResponse(BaseModel):
-    id: int
-    username: str
-    email: str
-    first_name: str
-    last_name: str
+    @validator("confirm_password")
+    def passwords_match(cls, confirm_password, values):
+        if "password" in values and confirm_password != values["password"]:
+            raise ValueError("Passwords do not match")
+        return confirm_password
 
     class Config:
         orm_mode = True
 
-class UserLogin(BaseModel):
-    username: str
+
+# User login schema
+class UserLoginSchema(BaseModel):
+    email: EmailStr
     password: str
 
-class LoginResponse(BaseModel):
-    access_token: str
-    access_expiry: int
-    refresh_token: str
-    refresh_expiry: int
-    status: bool
+    class Config:
+        orm_mode = True
+
+
+# Email verification schema (used for email confirmation)
+class EmailVerificationSchema(BaseModel):
+    email: EmailStr
+
+    class Config:
+        orm_mode = True
+
+
+# Password reset schema (for resetting the password)
+class PasswordResetSchema(BaseModel):
+    email: EmailStr
+    new_password: str
+    confirm_new_password: str
+
+    @validator("confirm_new_password")
+    def passwords_match(cls, confirm_new_password, values):
+        if "new_password" in values and confirm_new_password != values["new_password"]:
+            raise ValueError("Passwords do not match")
+        return confirm_new_password
+
+    class Config:
+        orm_mode = True

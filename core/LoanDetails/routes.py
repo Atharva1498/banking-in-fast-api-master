@@ -1,80 +1,106 @@
-from fastapi import APIRouter, HTTPException
-from tortoise.exceptions import DoesNotExist
-from core.LoanDetails.models import LoanDetails  # Import LoanDetails from core.models
-from pydantic import BaseModel
+from fastapi import APIRouter, HTTPException, Depends, status
 from typing import List
+from core.LoanDetails.models import LoanDetails
+from core.LoanDetails.schemas import LoanDetailCreate, LoanDetailUpdate, LoanDetailResponse
+from core.bank.models import BankDetails
+from core.Person.models import Person
 
-# Create an instance of the APIRouter
-loan_details_router = APIRouter()
-
-# Pydantic schema for creating and reading LoanDetails
-class LoanDetailsCreate(BaseModel):
-    loan_amount: float
-    loan_type: str
-    interest_rate: float
-    tenure: int  # Loan tenure in years
-
-class LoanDetailsOut(LoanDetailsCreate):
-    id: int
-    created_at: str  # You can add created_at or any other fields returned from the DB
-
-    class Config:
-        orm_mode = True  # This allows Pydantic to work with Tortoise models
+loan_routes = APIRouter()
 
 
-# Route to create a new LoanDetails entry
-@loan_details_router.post("/loan-details/", response_model=LoanDetailsOut)
-async def create_loan_details(loan_details: LoanDetailsCreate):
-    # Create a new LoanDetails entry in the database
-    new_loan = await LoanDetails.create(**loan_details.dict())
+### CREATE LOAN ###
+
+@loan_routes.post("/loans", response_model=LoanDetailResponse, status_code=status.HTTP_201_CREATED)
+async def create_loan(loan_data: LoanDetailCreate):
+    # Validate BankDetails
+    bank = await BankDetails.get_or_none(id=loan_data.bank_id)
+    if not bank:
+        raise HTTPException(status_code=404, detail="Bank not found")
+
+    # Validate Person (optional)
+    person = None
+    if loan_data.person_id:
+        person = await Person.get_or_none(id=loan_data.person_id)
+        if not person:
+            raise HTTPException(status_code=404, detail="Person not found")
+
+    # Create Loan
+    new_loan = await LoanDetails.create(
+        borrower_name=loan_data.borrower_name,
+        sanction_date=loan_data.sanction_date,
+        loan_amount=loan_data.loan_amount,
+        loan_tenure=loan_data.loan_tenure,
+        repayment_frequency=loan_data.repayment_frequency,
+        no_of_emi=loan_data.no_of_emi,
+        emi_amount=loan_data.emi_amount,
+        loan_type=loan_data.loan_type,
+        current_pending_amount=loan_data.current_pending_amount,
+        date_of_emi=loan_data.date_of_emi,
+        start_date=loan_data.start_date,
+        end_date=loan_data.end_date,
+        bank_detail=bank,
+        person=person,
+    )
     return new_loan
 
 
-# Route to get all LoanDetails entries
-@loan_details_router.get("/loan-details/", response_model=List[LoanDetailsOut])
-async def get_all_loan_details():
-    # Get all loan details from the database
-    loans = await LoanDetails.all()
+### GET ALL LOANS ###
+
+@loan_routes.get("/loans", response_model=List[LoanDetailResponse])
+async def get_all_loans():
+    return await LoanDetails.all()
+
+
+### GET LOAN BY ID ###
+
+@loan_routes.get("/loans/{loan_id}", response_model=LoanDetailResponse)
+async def get_loan(loan_id: int):
+    loan = await LoanDetails.get_or_none(id=loan_id)
+    if not loan:
+        raise HTTPException(status_code=404, detail="Loan not found")
+    return loan
+
+
+### GET LOANS BY BANK ###
+
+@loan_routes.get("/bank/{bank_id}/loans", response_model=List[LoanDetailResponse])
+async def get_loans_by_bank(bank_id: int):
+    bank = await BankDetails.get_or_none(id=bank_id)
+    if not bank:
+        raise HTTPException(status_code=404, detail="Bank not found")
+    loans = await LoanDetails.filter(bank_detail=bank).all()
     return loans
 
 
-# Route to get a specific LoanDetails entry by ID
-@loan_details_router.get("/loan-details/{loan_id}", response_model=LoanDetailsOut)
-async def get_loan_details(loan_id: int):
-    try:
-        # Try to fetch the loan details by ID
-        loan = await LoanDetails.get(id=loan_id)
-        return loan
-    except DoesNotExist:
-        # If not found, raise a 404 error
+### GET LOANS BY PERSON ###
+
+@loan_routes.get("/person/{person_id}/loans", response_model=List[LoanDetailResponse])
+async def get_loans_by_person(person_id: int):
+    person = await Person.get_or_none(id=person_id)
+    if not person:
+        raise HTTPException(status_code=404, detail="Person not found")
+    loans = await LoanDetails.filter(person=person).all()
+    return loans
+
+
+### UPDATE LOAN ###
+
+@loan_routes.put("/loans/{loan_id}", response_model=LoanDetailResponse)
+async def update_loan(loan_id: int, loan_data: LoanDetailUpdate):
+    loan = await LoanDetails.get_or_none(id=loan_id)
+    if not loan:
         raise HTTPException(status_code=404, detail="Loan not found")
 
+    # Update loan details
+    await loan.update_from_dict(loan_data.dict(exclude_unset=True)).save()
+    return loan
 
-# Route to update a specific LoanDetails entry by ID
-@loan_details_router.put("/loan-details/{loan_id}", response_model=LoanDetailsOut)
-async def update_loan_details(loan_id: int, loan_details: LoanDetailsCreate):
-    try:
-        # Try to fetch and update the loan details
-        loan = await LoanDetails.get(id=loan_id)
-        loan.loan_amount = loan_details.loan_amount
-        loan.loan_type = loan_details.loan_type
-        loan.interest_rate = loan_details.interest_rate
-        loan.tenure = loan_details.tenure
-        await loan.save()
-        return loan
-    except DoesNotExist:
-        # If not found, raise a 404 error
+
+### DELETE LOAN ###
+
+@loan_routes.delete("/loans/{loan_id}", status_code=status.HTTP_204_NO_CONTENT)
+async def delete_loan(loan_id: int):
+    loan = await LoanDetails.get_or_none(id=loan_id)
+    if not loan:
         raise HTTPException(status_code=404, detail="Loan not found")
-
-
-# Route to delete a specific LoanDetails entry by ID
-@loan_details_router.delete("/loan-details/{loan_id}")
-async def delete_loan_details(loan_id: int):
-    try:
-        # Try to fetch and delete the loan details
-        loan = await LoanDetails.get(id=loan_id)
-        await loan.delete()
-        return {"message": "Loan details deleted successfully"}
-    except DoesNotExist:
-        # If not found, raise a 404 error
-        raise HTTPException(status_code=404, detail="Loan not found")
+    await loan.delete()
