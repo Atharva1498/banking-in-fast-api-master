@@ -7,7 +7,6 @@ class DepositorDetails(models.Model):
     id = fields.IntField(pk=True)
     depositor_name = fields.CharField(max_length=100)
     person = fields.ForeignKeyField("models.Person", related_name="depositors")  
-    bank_detail = fields.ForeignKeyField("models.BankDetails", related_name="depositors") 
     contact_number = fields.CharField(max_length=15)
     email = fields.CharField(max_length=100)
     address = fields.TextField()

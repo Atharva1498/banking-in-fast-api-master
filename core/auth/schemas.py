@@ -19,7 +19,6 @@ class UserRegisterSchema(BaseModel):
         orm_mode = True
 
 
-# User login schema
 class UserLoginSchema(BaseModel):
     email: EmailStr
     password: str
@@ -28,15 +27,12 @@ class UserLoginSchema(BaseModel):
         orm_mode = True
 
 
-# Email verification schema (used for email confirmation)
 class EmailVerificationSchema(BaseModel):
     email: EmailStr
 
     class Config:
         orm_mode = True
 
-
-# Password reset schema (for resetting the password)
 class PasswordResetSchema(BaseModel):
     email: EmailStr
     new_password: str

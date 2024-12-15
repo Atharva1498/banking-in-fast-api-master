@@ -3,7 +3,7 @@ from typing import AsyncIterator
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from tortoise.contrib.fastapi import register_tortoise
-from core.shared.db import init_db
+from core.shared.db import init_db, close_db
 from core.shared.conf import settings
 from core.auth.routes import auth_router
 from core.Person.routes import person_router

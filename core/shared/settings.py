@@ -1,43 +1,29 @@
-from pydantic_settings import BaseSettings
-from decouple import config
+from functools import lru_cache
+from pydantic import BaseSettings
 
 class Settings(BaseSettings):
-    SECRET_KEY: str = config("SECRET_KEY", cast = str)
-    JWT_ALGORITHM: str = "HS256"
-    JWT_EXPIRATION_TIME: int = 30  # minutes
-    JWT_REFRESH_EXPIRATION_TIME: int = 60  # minutes
+    """Application configuration settings."""
+    # General app settings
+    APP_NAME: str = "FastAPI App"
+    ENV: str = "development"  # Can be 'development', 'staging', or 'production'
+    DEBUG: bool = True  # Enable or disable debug mode
 
+    # Database configuration
+    DATABASE_URL: str = "postgres://admin:admin@postgres:5432/bank_db"  # Default for Docker
+    DB_ECHO: bool = False  # Enable SQL query logging if True
+    DB_CONNECTION_LIMIT: int = 10  # Optional: Limit connection pool size
 
-    DATABASE_NAME: str = config("DATABASE_NAME", cast = str)
-    DATABASE_USER: str = config("DATABASE_USER", cast = str)
-    DATABASE_PASSWORD: str = config("DATABASE_PASSWORD", cast = str)
-    DATABASE_HOST: str = config("DATABASE_HOST", cast = str)
-    DATABASE_PORT: int = config("DATABASE_PORT", cast = int)
+    # You can add other configuration fields as needed
 
     class Config:
-        env_file = ".env"
-        env_file_encoding = 'utf-8'
+        """Meta-configuration for BaseSettings."""
+        env_file = ".env"  # Automatically loads variables from .env file
+        env_file_encoding = "utf-8"
 
-    @property
-    def DATABASE(self):
-        return (
-            f"postgres://{self.DATABASE_USER}:{self.DATABASE_PASSWORD}"
-            f"@{self.DATABASE_HOST}:{self.DATABASE_PORT}/{self.DATABASE_NAME}"
-        )
-    
-    @property
-    def TORTOISE_ORM(self) -> dict:
-        return {
-            "connections": {
-                "default": self.DATABASE
-            },
-            "apps": {
-                "models": {
-                    "models": ["core.shared.models"],
-                    "default_connection": "default",
-                }
-            }
-        }
+@lru_cache()
+def get_settings():
+    """Return the cached settings instance."""
+    return Settings()
 
-settings = Settings()
-
+# Global settings instance
+settings = get_settings()
